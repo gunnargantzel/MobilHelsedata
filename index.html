@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobil Helsedata</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Samle og del helsedata og lokasjonsdata">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Mobil Helsedata">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180x180.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="icons/icon-167x167.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16x16.png">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <h1>🏥 Mobil Helsedata</h1>
+            <p>Samle og del din helsedata på en sikker måte</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Welcome Section -->
+            <section class="welcome-section">
+                <div class="welcome-card">
+                    <h2>Velkommen til Mobil Helsedata</h2>
+                    <p>Denne appen lar deg samle og dele helsedata og lokasjonsdata på en sikker måte. Du har full kontroll over hvilke data som deles.</p>
+                </div>
+            </section>
+
+            <!-- Permissions Section -->
+            <section class="permissions-section">
+                <div class="permission-card">
+                    <div class="permission-header">
+                        <h3>📍 Lokasjonsdata</h3>
+                        <div class="permission-status" id="location-status">
+                            <span class="status-indicator pending"></span>
+                            <span class="status-text">Ikke gitt</span>
+                        </div>
+                    </div>
+                    <p>Tillat appen å få tilgang til din lokasjon for å samle lokasjonsdata.</p>
+                    <button class="permission-btn" id="location-btn" disabled>
+                        Be om tillatelse
+                    </button>
+                </div>
+
+                <div class="permission-card">
+                    <div class="permission-header">
+                        <h3>❤️ Apple Health Data</h3>
+                        <div class="permission-status" id="health-status">
+                            <span class="status-indicator pending"></span>
+                            <span class="status-text">Ikke gitt</span>
+                        </div>
+                    </div>
+                    <p>Velg hvilke helsedata fra Apple Health du vil dele.</p>
+                    <button class="permission-btn" id="health-btn" disabled>
+                        Velg helsedata
+                    </button>
+                </div>
+            </section>
+
+            <!-- Data Selection Modal -->
+            <div class="modal" id="health-modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Velg helsedata å dele</h3>
+                        <button class="close-btn" id="close-modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="data-categories">
+                            <div class="category">
+                                <h4>Hjerte og sirkulasjon</h4>
+                                <div class="data-options">
+                                    <label class="data-option">
+                                        <input type="checkbox" value="heartRate">
+                                        <span>Hjerteslag</span>
+                                    </label>
+                                    <label class="data-option">
+                                        <input type="checkbox" value="bloodPressure">
+                                        <span>Blodtrykk</span>
+                                    </label>
+                                    <label class="data-option">
+                                        <input type="checkbox" value="restingHeartRate">
+                                        <span>Hvilende hjerteslag</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="category">
+                                <h4>Aktivitet</h4>
+                                <div class="data-options">
+                                    <label class="data-option">
+                                        <input type="checkbox" value="steps">
+                                        <span>Skritt</span>
+                                    </label>
+                                    <label class="data-option">
+                                        <input type="checkbox" value="distance">
+                                        <span>Distanse</span>
+                                    </label>
+                                    <label class="data-option">
+                                        <input type="checkbox" value="activeEnergy">
+                                        <span>Aktiv energi</span>
+                                    </label>
+                                    <label class="data-option">
+                                        <input type="checkbox" value="exerciseTime">
+                                        <span>Trenings tid</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="category">
+                                <h4>Søvn</h4>
+                                <div class="data-options">
+                                    <label class="data-option">
+                                        <input type="checkbox" value="sleepAnalysis">
+                                        <span>Søvnanalyse</span>
+                                    </label>
+                                    <label class="data-option">
+                                        <input type="checkbox" value="bedtime">
+                                        <span>Leggetid</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="category">
+                                <h4>Kroppsmål</h4>
+                                <div class="data-options">
+                                    <label class="data-option">
+                                        <input type="checkbox" value="weight">
+                                        <span>Vekt</span>
+                                    </label>
+                                    <label class="data-option">
+                                        <input type="checkbox" value="height">
+                                        <span>Høyde</span>
+                                    </label>
+                                    <label class="data-option">
+                                        <input type="checkbox" value="bmi">
+                                        <span>BMI</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-secondary" id="cancel-health">Avbryt</button>
+                        <button class="btn-primary" id="confirm-health">Bekreft valg</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Summary -->
+            <section class="data-summary" id="data-summary" style="display: none;">
+                <h3>Samlet data</h3>
+                <div class="summary-cards">
+                    <div class="summary-card">
+                        <h4>Lokasjon</h4>
+                        <p id="location-summary">Ingen data</p>
+                    </div>
+                    <div class="summary-card">
+                        <h4>Helsedata</h4>
+                        <p id="health-summary">Ingen data valgt</p>
+                    </div>
+                </div>
+                <button class="btn-primary" id="share-data">Del data</button>
+            </section>
+        </main>
+
+        <!-- Install Prompt -->
+        <div class="install-prompt" id="install-prompt" style="display: none;">
+            <div class="install-content">
+                <h3>📱 Installer appen</h3>
+                <p>Installer denne appen på hjemmeskjermen for rask tilgang</p>
+                <button class="btn-primary" id="install-btn">Installer</button>
+                <button class="btn-secondary" id="dismiss-install">Senere</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="app.js"></script>
+</body>
+</html>
