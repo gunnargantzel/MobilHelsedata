@@ -25,7 +25,7 @@ Denne guiden viser deg hvordan du setter opp Azure AD-autentisering og Dataverse
 
 1. **Noter ned**:
    - `Application (client) ID`
-   - `Directory (tenant) ID`
+   - `Directory (tenant) ID` (din tenant ID: `647bb407-d412-4d48-b7bf-367c871cfca6`)
 
 2. Gå til **Certificates & secrets**
 3. Klikk **New client secret**

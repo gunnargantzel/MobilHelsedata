@@ -6,7 +6,7 @@ module.exports = {
   azure: {
     clientId: 'your-client-id-here',
     clientSecret: 'your-client-secret-here',
-    tenantId: 'your-tenant-id-here',
+    tenantId: '647bb407-d412-4d48-b7bf-367c871cfca6',
     redirectUri: 'http://localhost:3000/auth/callback',
     scopes: ['User.Read', 'openid', 'profile', 'email']
   },
