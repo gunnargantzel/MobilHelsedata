@@ -6,7 +6,9 @@
   "scripts": {
     "start": "python server.py",
     "serve": "npx serve . -p 8000",
-    "dev": "npx live-server --port=8000 --host=0.0.0.0"
+    "dev": "npx live-server --port=8000 --host=0.0.0.0",
+    "build": "echo 'No build step required for static PWA'",
+    "build:azure": "echo 'Azure build completed'"
   },
   "keywords": [
     "pwa",

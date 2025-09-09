@@ -1,0 +1,53 @@
+{
+  "routes": [
+    {
+      "route": "/",
+      "serve": "/index.html",
+      "statusCode": 200
+    },
+    {
+      "route": "/manifest.json",
+      "serve": "/manifest.json",
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    },
+    {
+      "route": "/sw.js",
+      "serve": "/sw.js",
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": "application/javascript"
+      }
+    },
+    {
+      "route": "/icons/*",
+      "serve": "/icons/*",
+      "statusCode": 200
+    },
+    {
+      "route": "/*",
+      "serve": "/index.html",
+      "statusCode": 200
+    }
+  ],
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/icons/*", "/manifest.json", "/sw.js"]
+  },
+  "mimeTypes": {
+    ".json": "application/json",
+    ".js": "application/javascript",
+    ".css": "text/css",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".gif": "image/gif",
+    ".svg": "image/svg+xml",
+    ".ico": "image/x-icon"
+  },
+  "globalHeaders": {
+    "Cache-Control": "public, max-age=31536000"
+  }
+}
