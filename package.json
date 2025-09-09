@@ -4,9 +4,11 @@
   "description": "En PWA-app for å samle og dele helsedata og lokasjonsdata",
   "main": "index.html",
   "scripts": {
-    "start": "python server.py",
+    "start": "node server.js",
+    "start:python": "python server.py",
     "serve": "npx serve . -p 8000",
     "dev": "npx live-server --port=8000 --host=0.0.0.0",
+    "dev:backend": "node server.js",
     "build": "echo 'No build step required for static PWA'",
     "build:azure": "echo 'Azure build completed'"
   },
@@ -20,6 +22,10 @@
   ],
   "author": "Mobil Helsedata Team",
   "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
   "devDependencies": {
     "serve": "^14.2.0",
     "live-server": "^1.2.2"

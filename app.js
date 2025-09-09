@@ -274,7 +274,9 @@ class MobilHelsedataApp {
       return;
     }
 
+    const userId = this.getUserId();
     const shareData = {
+      userId,
       location: this.locationData,
       health: this.healthData,
       timestamp: new Date().toISOString(),
@@ -282,20 +284,68 @@ class MobilHelsedataApp {
     };
 
     try {
-      if (navigator.share) {
-        await navigator.share({
-          title: 'Mobil Helsedata',
-          text: `Helsedata samlet: ${this.healthDataSelection.size} typer, Lokasjon: ${this.locationData ? 'Ja' : 'Nei'}`,
-          url: window.location.href
-        });
+      // Send data to backend
+      const response = await this.sendDataToBackend(shareData);
+      
+      if (response.success) {
+        this.showNotification('Data sendt til server!', 'success');
+        
+        // Also offer native sharing
+        if (navigator.share) {
+          await navigator.share({
+            title: 'Mobil Helsedata',
+            text: `Helsedata samlet: ${this.healthDataSelection.size} typer, Lokasjon: ${this.locationData ? 'Ja' : 'Nei'}`,
+            url: window.location.href
+          });
+        }
       } else {
-        // Fallback: copy to clipboard
-        await navigator.clipboard.writeText(JSON.stringify(shareData, null, 2));
-        this.showNotification('Data kopiert til utklippstavle', 'success');
+        throw new Error('Server rejected data');
       }
     } catch (error) {
       console.error('Share error:', error);
-      this.showNotification('Kunne ikke dele data', 'error');
+      
+      // Fallback: copy to clipboard
+      try {
+        await navigator.clipboard.writeText(JSON.stringify(shareData, null, 2));
+        this.showNotification('Data kopiert til utklippstavle (server ikke tilgjengelig)', 'warning');
+      } catch (clipboardError) {
+        this.showNotification('Kunne ikke dele data', 'error');
+      }
+    }
+  }
+
+  getUserId() {
+    // Generate or retrieve user ID
+    let userId = localStorage.getItem('mobilHelsedata_userId');
+    if (!userId) {
+      userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('mobilHelsedata_userId', userId);
+    }
+    return userId;
+  }
+
+  async sendDataToBackend(data) {
+    const API_BASE_URL = window.location.origin.includes('localhost') 
+      ? 'http://localhost:3000' 
+      : window.location.origin;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/combined-data`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Backend communication error:', error);
+      throw error;
     }
   }
 
