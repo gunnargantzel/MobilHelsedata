@@ -38,6 +38,27 @@
 
         <!-- Main Content -->
         <main class="main-content">
+            <!-- Login Section -->
+            <section class="login-section" id="login-section">
+                <div class="login-card">
+                    <h2>🔐 Logg inn med Azure AD</h2>
+                    <p>Du må være logget inn for å samle og dele helsedata. Vi bruker Microsoft Azure AD for sikker autentisering.</p>
+                    <button class="btn-primary" id="login-btn">Logg inn med Microsoft</button>
+                </div>
+            </section>
+
+            <!-- User Section -->
+            <section class="user-section" id="user-section" style="display: none;">
+                <div class="user-card">
+                    <div class="user-info">
+                        <h3>👤 Logget inn som</h3>
+                        <p id="user-name">Bruker</p>
+                        <p id="user-email" class="user-email"></p>
+                    </div>
+                    <button class="btn-secondary" id="logout-btn">Logg ut</button>
+                </div>
+            </section>
+
             <!-- Welcome Section -->
             <section class="welcome-section">
                 <div class="welcome-card">
@@ -195,6 +216,6 @@
     </div>
 
     <!-- Scripts -->
-    <script src="app.js"></script>
+    <script src="azure-app.js"></script>
 </body>
 </html>
