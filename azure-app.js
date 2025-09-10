@@ -474,23 +474,10 @@ class MobilHelsedataAzureApp {
     };
 
     try {
-      // Send health data if available
-      if (this.healthData) {
-        await this.makeAuthenticatedRequest('/api/health-data', {
-          method: 'POST',
-          body: JSON.stringify(shareData)
-        });
-      }
-
-      // Send location data if available
-      if (this.locationData) {
-        await this.makeAuthenticatedRequest('/api/location-data', {
-          method: 'POST',
-          body: JSON.stringify(shareData)
-        });
-      }
-
-      this.showNotification('Data sendt til Dataverse!', 'success');
+      // Store data locally instead of sending to server
+      localStorage.setItem('mobilHelsedata_shared', JSON.stringify(shareData));
+      
+      this.showNotification('Data lagret lokalt!', 'success');
       
       // Also offer native sharing
       if (navigator.share) {
@@ -506,34 +493,7 @@ class MobilHelsedataAzureApp {
     }
   }
 
-  async makeAuthenticatedRequest(endpoint, options = {}) {
-    const url = `${this.getApiBaseUrl()}${endpoint}`;
-    const headers = {
-      'Content-Type': 'application/json',
-      ...options.headers
-    };
-
-    if (this.accessToken) {
-      headers['Authorization'] = `Bearer ${this.accessToken}`;
-    }
-
-    const response = await fetch(url, {
-      ...options,
-      headers
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    return response;
-  }
-
-  getApiBaseUrl() {
-    return window.location.origin.includes('localhost') 
-      ? 'http://localhost:3000' 
-      : window.location.origin;
-  }
+  // Data is now stored locally - no server requests needed
 
   setupInstallPrompt() {
     let deferredPrompt;
@@ -602,43 +562,12 @@ class MobilHelsedataAzureApp {
   }
 }
 
-// Handle Azure AD callback
-if (window.location.search.includes('code=')) {
-  // We're returning from Azure AD login
-  const urlParams = new URLSearchParams(window.location.search);
-  const code = urlParams.get('code');
-  
-  if (code) {
-    // Send code to backend for token exchange
-    fetch('/auth/callback', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ code })
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        localStorage.setItem('mobilHelsedata_token', data.token);
-        localStorage.setItem('mobilHelsedata_user', JSON.stringify(data.user));
-        
-        // Redirect to clean URL
-        window.location.href = window.location.origin + window.location.pathname;
-      } else {
-        console.error('Authentication failed:', data.error);
-      }
-    })
-    .catch(error => {
-      console.error('Authentication error:', error);
-    });
-  }
-} else {
-  // Initialize app normally
-  document.addEventListener('DOMContentLoaded', () => {
-    new MobilHelsedataAzureApp();
-  });
-}
+// MSAL handles all authentication callbacks automatically
+
+// Initialize app normally
+document.addEventListener('DOMContentLoaded', () => {
+  new MobilHelsedataAzureApp();
+});
 
 // Handle online/offline status
 window.addEventListener('online', () => {
