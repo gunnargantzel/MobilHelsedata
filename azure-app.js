@@ -14,7 +14,7 @@ class MobilHelsedataAzureApp {
       auth: {
         clientId: '7a0a3c1e-6465-41bf-901f-2b1850335c32',
         authority: 'https://login.microsoftonline.com/647bb407-d412-4d48-b7bf-367c871cfca6',
-        redirectUri: window.location.origin + '/',
+        redirectUri: window.location.origin + '/auth/login',
         postLogoutRedirectUri: window.location.origin + '/'
       },
       cache: {
@@ -57,6 +57,11 @@ class MobilHelsedataAzureApp {
         };
         this.updateAuthUI();
         this.showNotification('Logget inn vellykket!', 'success');
+        
+        // Redirect to clean URL after successful login
+        if (window.location.pathname === '/auth/login') {
+          window.location.href = window.location.origin + '/';
+        }
       }
     } catch (error) {
       console.error('MSAL initialization failed:', error);
