@@ -1,22 +1,24 @@
 # Mobil Helsedata PWA
 
-En Progressive Web App (PWA) som lar brukere samle og dele helsedata og lokasjonsdata på en sikker måte.
+En ren Progressive Web App (PWA) som lar brukere samle helsedata og lokasjonsdata lokalt på enheten sin.
 
 ## Funksjoner
 
 - 📱 **PWA-støtte**: Kan installeres på iPhone som en native app
 - 📍 **Lokasjonsdata**: Samler inn brukerens lokasjon med samtykke
-- ❤️ **Apple Health-integrasjon**: Lar brukere velge hvilke helsedata som skal deles
-- 🔒 **Sikkerhet**: Brukeren har full kontroll over hvilke data som samles inn
-- 📊 **Dataoversikt**: Viser samlet data før deling
+- ❤️ **Apple Health-integrasjon**: Lar brukere velge hvilke helsedata som skal samles inn
+- 🔒 **Lokal lagring**: Alle data lagres kun lokalt på enheten
+- 📊 **Dataoversikt**: Viser samlet data og statistikk
 - 🎨 **Moderne UI**: Responsivt design optimalisert for mobil
+- 🌐 **Offline-funksjonalitet**: Fungerer uten internett-tilkobling
 
 ## Teknisk oversikt
 
 ### Arkitektur
 - **Frontend**: Vanilla HTML, CSS, JavaScript
-- **PWA**: Service Worker for offline-funksjonalitet
+- **PWA**: Service Worker for offline-funksjonalitet og caching
 - **Manifest**: App-konfigurasjon for installasjon
+- **Lokal lagring**: Browser LocalStorage og IndexedDB
 - **Responsivt design**: Optimalisert for iPhone og andre mobile enheter
 
 ### Filer
@@ -30,21 +32,22 @@ En Progressive Web App (PWA) som lar brukere samle og dele helsedata og lokasjon
 ## Installasjon og bruk
 
 ### For utviklere
-
-#### Standard PWA (uten Azure-integrasjon)
 1. Klon eller last ned prosjektet
 2. Åpne `create-icons.html` i en nettleser for å generere ikoner
 3. Last ned alle ikoner til `icons/`-mappen
-4. Start en lokal web-server (f.eks. med Python: `python -m http.server 8000`)
+4. Start en lokal web-server:
+   ```bash
+   # Med Node.js (anbefalt)
+   npm install
+   npm run serve
+   
+   # Eller med Python
+   python -m http.server 8000
+   
+   # Eller med PHP
+   php -S localhost:8000
+   ```
 5. Åpne appen i Safari på iPhone
-
-#### Azure-integrasjon (anbefalt for produksjon)
-1. Klon eller last ned prosjektet
-2. Installer avhengigheter: `npm install`
-3. Konfigurer Azure AD og Dataverse (se `AZURE_SETUP.md`)
-4. Opprett `.env` fil med dine credentials (se `azure-config.example.js`)
-5. Start Azure-serveren: `npm run start:azure`
-6. Åpne appen på `http://localhost:3000`
 
 ### For brukere
 1. Åpne appen i Safari på iPhone
@@ -56,7 +59,7 @@ En Progressive Web App (PWA) som lar brukere samle og dele helsedata og lokasjon
 ### Lokasjonsdata
 - Brukeren må eksplisitt gi tillatelse
 - Samler inn: breddegrad, lengdegrad, nøyaktighet, tidsstempel
-- Data lagres lokalt og deles kun når brukeren velger det
+- Data lagres kun lokalt på enheten
 
 ### Apple Health-data
 Brukeren kan velge mellom:
@@ -65,12 +68,19 @@ Brukeren kan velge mellom:
 - **Søvn**: Søvnanalyse, leggetid
 - **Kroppsmål**: Vekt, høyde, BMI
 
+### Datalagring
+- Alle data lagres lokalt i browserens LocalStorage
+- Ingen data sendes til eksterne servere
+- Brukeren har full kontroll over sine data
+
 ## Sikkerhet og personvern
 
 - Alle tillatelser krever eksplisitt bruker-samtykke
 - Data lagres kun lokalt på enheten
-- Ingen data sendes til eksterne servere uten brukerens eksplisitte tillatelse
+- Ingen data sendes til eksterne servere
+- Ingen tracking eller analytics
 - Brukeren kan når som helst endre eller trekke tilbake tillatelser
+- Data kan slettes når som helst fra appen
 
 ## Browser-støtte
 
@@ -82,29 +92,18 @@ Brukeren kan velge mellom:
 ## Utvikling
 
 ### Lokal utvikling
-
-#### Standard PWA
 ```bash
-# Start lokal server
-python -m http.server 8000
+# Installer avhengigheter (kun for utvikling)
+npm install
 
-# Eller med Node.js
-npx serve .
+# Start lokal server
+npm run serve
+
+# Eller med Python
+python -m http.server 8000
 
 # Eller med PHP
 php -S localhost:8000
-```
-
-#### Azure-integrasjon
-```bash
-# Installer avhengigheter
-npm install
-
-# Start Azure-serveren
-npm run start:azure
-
-# Eller for utvikling
-npm run dev:azure
 ```
 
 ### Testing på iPhone
@@ -117,10 +116,10 @@ npm run dev:azure
 
 - [ ] Ekte Apple HealthKit-integrasjon
 - [ ] Dataeksport til forskjellige formater (JSON, CSV)
-- [ ] Push-notifikasjoner for dataoppdateringer
-- [ ] Offline-datavisualisering
+- [ ] Avanserte datavisualiseringer og grafer
 - [ ] Flerspråk-støtte
-- [ ] Avanserte sikkerhetsfunksjoner
+- [ ] Data-synkronisering mellom enheter (valgfritt)
+- [ ] Automatisk backup til iCloud (valgfritt)
 
 ## Lisens
 
