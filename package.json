@@ -22,7 +22,10 @@
   "author": "Mobil Helsedata Team",
   "license": "MIT",
   "devDependencies": {
-    "serve": "^14.2.0",
-    "live-server": "^1.2.2"
+    "live-server": "^1.2.2",
+    "serve": "^14.2.0"
+  },
+  "dependencies": {
+    "@azure/msal-browser": "^4.22.1"
   }
 }

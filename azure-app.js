@@ -1,4 +1,4 @@
-// Mobil Helsedata PWA with Azure AD Authentication
+// Mobil Helsedata PWA with Entra ID Authentication
 
 class MobilHelsedataAzureApp {
   constructor() {
@@ -9,10 +9,35 @@ class MobilHelsedataAzureApp {
     this.user = null;
     this.accessToken = null;
     
+    // Entra ID Configuration
+    this.msalConfig = {
+      auth: {
+        clientId: '7a0a3c1e-6465-41bf-901f-2b1850335c32',
+        authority: 'https://login.microsoftonline.com/647bb407-d412-4d48-b7bf-367c871cfca6',
+        redirectUri: window.location.origin
+      },
+      cache: {
+        cacheLocation: 'localStorage',
+        storeAuthStateInCookie: false
+      }
+    };
+    
+    this.msalInstance = null;
+    
     this.init();
   }
 
   async init() {
+    // Initialize MSAL
+    try {
+      const { PublicClientApplication } = await import('https://unpkg.com/@azure/msal-browser@latest/dist/msal-browser.min.js');
+      this.msalInstance = new PublicClientApplication(this.msalConfig);
+      await this.msalInstance.initialize();
+      console.log('MSAL initialized successfully');
+    } catch (error) {
+      console.error('MSAL initialization failed:', error);
+    }
+
     // Register service worker
     if ('serviceWorker' in navigator) {
       try {
@@ -53,22 +78,29 @@ class MobilHelsedataAzureApp {
   }
 
   async checkAuthentication() {
-    const token = localStorage.getItem('mobilHelsedata_token');
-    if (token) {
-      try {
-        // Verify token is still valid
-        const response = await this.makeAuthenticatedRequest('/api/user/data');
-        if (response.ok) {
-          this.accessToken = token;
-          this.user = JSON.parse(localStorage.getItem('mobilHelsedata_user'));
-          this.updateAuthUI();
-          return true;
-        }
-      } catch (error) {
-        console.log('Token invalid, clearing storage');
-        this.clearAuthData();
-      }
+    if (!this.msalInstance) {
+      console.log('MSAL not initialized');
+      this.updateAuthUI();
+      return false;
     }
+
+    try {
+      // Check if user is already logged in
+      const accounts = this.msalInstance.getAllAccounts();
+      if (accounts.length > 0) {
+        this.msalInstance.setActiveAccount(accounts[0]);
+        this.user = {
+          name: accounts[0].name,
+          email: accounts[0].username
+        };
+        this.updateAuthUI();
+        return true;
+      }
+    } catch (error) {
+      console.error('Authentication check failed:', error);
+    }
+    
+    this.updateAuthUI();
     return false;
   }
 
@@ -135,17 +167,47 @@ class MobilHelsedataAzureApp {
   }
 
   async login() {
+    if (!this.msalInstance) {
+      this.showNotification('Autentisering ikke tilgjengelig', 'error');
+      return;
+    }
+
     try {
-      // Redirect to Azure AD login
-      const loginUrl = `${this.getApiBaseUrl()}/auth/login`;
-      window.location.href = loginUrl;
+      const loginRequest = {
+        scopes: ['User.Read', 'openid', 'profile', 'email'],
+        prompt: 'select_account'
+      };
+
+      const response = await this.msalInstance.loginPopup(loginRequest);
+      
+      if (response.account) {
+        this.msalInstance.setActiveAccount(response.account);
+        this.user = {
+          name: response.account.name,
+          email: response.account.username
+        };
+        this.updateAuthUI();
+        this.showNotification('Logget inn vellykket!', 'success');
+      }
     } catch (error) {
       console.error('Login error:', error);
-      this.showNotification('Kunne ikke logge inn', 'error');
+      if (error.errorCode === 'user_cancelled') {
+        this.showNotification('Innlogging avbrutt', 'info');
+      } else {
+        this.showNotification('Kunne ikke logge inn', 'error');
+      }
     }
   }
 
   async logout() {
+    if (this.msalInstance) {
+      try {
+        await this.msalInstance.logoutPopup();
+      } catch (error) {
+        console.error('Logout error:', error);
+      }
+    }
+    
     this.clearAuthData();
     this.user = null;
     this.accessToken = null;
@@ -156,6 +218,11 @@ class MobilHelsedataAzureApp {
   clearAuthData() {
     localStorage.removeItem('mobilHelsedata_token');
     localStorage.removeItem('mobilHelsedata_user');
+    
+    // Clear MSAL cache
+    if (this.msalInstance) {
+      this.msalInstance.clearCache();
+    }
   }
 
   updateAuthUI() {
