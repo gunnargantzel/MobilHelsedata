@@ -5,7 +5,7 @@ const urlsToCache = [
   '/index.html',
   '/styles.css',
   '/azure-app.js',
-  '/manifest.json',
+  '/manifest.json?v=3',
   '/icons/favicon.svg'
 ];
 
@@ -51,16 +51,15 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       console.log('Found caches:', cacheNames);
+      // Delete ALL caches to force complete refresh
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
+          console.log('Deleting cache:', cacheName);
+          return caches.delete(cacheName);
         })
       );
     }).then(() => {
-      console.log('Cache cleanup completed');
+      console.log('All caches deleted - forcing complete refresh');
       // Force immediate update
       return self.clients.claim();
     })
