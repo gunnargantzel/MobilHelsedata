@@ -1,10 +1,10 @@
 // Service Worker for Mobil Helsedata PWA
-const CACHE_NAME = 'mobil-helsedata-v8';
+const CACHE_NAME = 'mobil-helsedata-v9';
 const urlsToCache = [
   '/',
   '/index.html',
   '/styles.css',
-  '/azure-app.js?v=8',
+  '/azure-app.js?v=9',
   '/manifest.json?v=7',
   '/icons/favicon.svg'
 ];

@@ -42,13 +42,15 @@ class MobilHelsedataAzureApp {
     // Initialize MSAL
     console.log('Starting MSAL initialization...');
     try {
-      // Load MSAL from CDN
-      console.log('Loading MSAL from CDN...');
-      const { PublicClientApplication } = await import('https://cdn.jsdelivr.net/npm/@azure/msal-browser@4.22.1/dist/msal-browser.min.js');
+      // Check if MSAL is available globally
+      if (typeof PublicClientApplication === 'undefined') {
+        throw new Error('MSAL not loaded - please ensure MSAL script is included in HTML');
+      }
+      
       console.log('MSAL module loaded successfully');
       this.msalInstance = new PublicClientApplication(this.msalConfig);
       await this.msalInstance.initialize();
-      console.log('MSAL initialized successfully from CDN');
+      console.log('MSAL initialized successfully');
     } catch (error) {
       console.error('MSAL initialization failed:', error);
       this.msalInstance = null;
