@@ -533,37 +533,10 @@ class MobilHelsedataAzureApp {
   setupInstallPrompt() {
     let deferredPrompt;
     
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      document.getElementById('install-prompt').style.display = 'block';
-    });
-
-    window.addEventListener('appinstalled', () => {
-      document.getElementById('install-prompt').style.display = 'none';
-      this.showNotification('Appen er installert!', 'success');
-    });
+    // Install prompt removed - will be added back later
   }
 
-  async installApp() {
-    if (window.deferredPrompt) {
-      window.deferredPrompt.prompt();
-      const { outcome } = await window.deferredPrompt.userChoice;
-      
-      if (outcome === 'accepted') {
-        console.log('User accepted the install prompt');
-      } else {
-        console.log('User dismissed the install prompt');
-      }
-      
-      window.deferredPrompt = null;
-      document.getElementById('install-prompt').style.display = 'none';
-    }
-  }
-
-  dismissInstallPrompt() {
-    document.getElementById('install-prompt').style.display = 'none';
-  }
+  // Install app methods removed - will be added back later
 
   showNotification(message, type = 'info') {
     const notification = document.createElement('div');
