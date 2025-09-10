@@ -27,11 +27,6 @@
       "statusCode": 200
     },
     {
-      "route": "/auth/login",
-      "serve": "/auth/login.html",
-      "statusCode": 200
-    },
-    {
       "route": "/*",
       "serve": "/index.html",
       "statusCode": 200
@@ -39,7 +34,7 @@
   ],
   "navigationFallback": {
     "rewrite": "/index.html",
-    "exclude": ["/icons/*", "/manifest.json", "/sw.js", "/auth/login"]
+    "exclude": ["/icons/*", "/manifest.json", "/sw.js"]
   },
   "mimeTypes": {
     ".json": "application/json",
