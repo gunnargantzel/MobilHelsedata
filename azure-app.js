@@ -42,13 +42,13 @@ class MobilHelsedataAzureApp {
     // Initialize MSAL
     console.log('Starting MSAL initialization...');
     try {
-      // Load MSAL from local node_modules
-      console.log('Loading MSAL from local node_modules...');
-      const { PublicClientApplication } = await import('./node_modules/@azure/msal-browser/dist/msal-browser.min.js');
+      // Load MSAL from CDN
+      console.log('Loading MSAL from CDN...');
+      const { PublicClientApplication } = await import('https://cdn.jsdelivr.net/npm/@azure/msal-browser@4.22.1/dist/msal-browser.min.js');
       console.log('MSAL module loaded successfully');
       this.msalInstance = new PublicClientApplication(this.msalConfig);
       await this.msalInstance.initialize();
-      console.log('MSAL initialized successfully from local files');
+      console.log('MSAL initialized successfully from CDN');
     } catch (error) {
       console.error('MSAL initialization failed:', error);
       this.msalInstance = null;
@@ -158,48 +158,75 @@ class MobilHelsedataAzureApp {
     }
 
     // Location permission button
-    document.getElementById('location-btn').addEventListener('click', () => {
-      this.requestLocationPermission();
-    });
+    const locationBtn = document.getElementById('location-btn');
+    if (locationBtn) {
+      locationBtn.addEventListener('click', () => {
+        this.requestLocationPermission();
+      });
+    }
 
     // Health data button
-    document.getElementById('health-btn').addEventListener('click', () => {
-      this.openHealthModal();
-    });
+    const healthBtn = document.getElementById('health-btn');
+    if (healthBtn) {
+      healthBtn.addEventListener('click', () => {
+        this.openHealthModal();
+      });
+    }
 
     // Modal controls
-    document.getElementById('close-modal').addEventListener('click', () => {
-      this.closeHealthModal();
-    });
+    const closeModalBtn = document.getElementById('close-modal');
+    if (closeModalBtn) {
+      closeModalBtn.addEventListener('click', () => {
+        this.closeHealthModal();
+      });
+    }
 
-    document.getElementById('cancel-health').addEventListener('click', () => {
-      this.closeHealthModal();
-    });
+    const cancelHealthBtn = document.getElementById('cancel-health');
+    if (cancelHealthBtn) {
+      cancelHealthBtn.addEventListener('click', () => {
+        this.closeHealthModal();
+      });
+    }
 
-    document.getElementById('confirm-health').addEventListener('click', () => {
-      this.confirmHealthSelection();
-    });
+    const confirmHealthBtn = document.getElementById('confirm-health');
+    if (confirmHealthBtn) {
+      confirmHealthBtn.addEventListener('click', () => {
+        this.confirmHealthSelection();
+      });
+    }
 
-    // Install prompt
-    document.getElementById('install-btn').addEventListener('click', () => {
-      this.installApp();
-    });
+    // Install prompt (these elements might not exist)
+    const installBtn = document.getElementById('install-btn');
+    if (installBtn) {
+      installBtn.addEventListener('click', () => {
+        this.installApp();
+      });
+    }
 
-    document.getElementById('dismiss-install').addEventListener('click', () => {
-      this.dismissInstallPrompt();
-    });
+    const dismissInstallBtn = document.getElementById('dismiss-install');
+    if (dismissInstallBtn) {
+      dismissInstallBtn.addEventListener('click', () => {
+        this.dismissInstallPrompt();
+      });
+    }
 
     // Share data button
-    document.getElementById('share-data').addEventListener('click', () => {
-      this.shareData();
-    });
+    const shareDataBtn = document.getElementById('share-data');
+    if (shareDataBtn) {
+      shareDataBtn.addEventListener('click', () => {
+        this.shareData();
+      });
+    }
 
     // Close modal when clicking outside
-    document.getElementById('health-modal').addEventListener('click', (e) => {
-      if (e.target.id === 'health-modal') {
-        this.closeHealthModal();
-      }
-    });
+    const healthModal = document.getElementById('health-modal');
+    if (healthModal) {
+      healthModal.addEventListener('click', (e) => {
+        if (e.target.id === 'health-modal') {
+          this.closeHealthModal();
+        }
+      });
+    }
   }
 
   async login() {
@@ -536,7 +563,15 @@ class MobilHelsedataAzureApp {
     // Install prompt removed - will be added back later
   }
 
-  // Install app methods removed - will be added back later
+  installApp() {
+    // Placeholder for install functionality
+    console.log('Install app functionality not yet implemented');
+  }
+
+  dismissInstallPrompt() {
+    // Placeholder for dismissing install prompt
+    console.log('Dismiss install prompt functionality not yet implemented');
+  }
 
   showNotification(message, type = 'info') {
     const notification = document.createElement('div');
