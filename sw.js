@@ -1,5 +1,5 @@
 // Service Worker for Mobil Helsedata PWA
-const CACHE_NAME = 'mobil-helsedata-v2';
+const CACHE_NAME = 'mobil-helsedata-v3';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -11,6 +11,7 @@ const urlsToCache = [
 
 // Install event - cache resources
 self.addEventListener('install', (event) => {
+  console.log('Service Worker installing...');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
@@ -26,6 +27,10 @@ self.addEventListener('install', (event) => {
             )
           );
         });
+      }).then(() => {
+        console.log('Cache populated successfully');
+        // Skip waiting and activate immediately
+        return self.skipWaiting();
       })
   );
 });
@@ -45,6 +50,7 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
+      console.log('Found caches:', cacheNames);
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
@@ -53,6 +59,10 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
+    }).then(() => {
+      console.log('Cache cleanup completed');
+      // Force immediate update
+      return self.clients.claim();
     })
   );
 });

@@ -16,8 +16,24 @@ class MobilHelsedataAzureApp {
     // Register service worker
     if ('serviceWorker' in navigator) {
       try {
-        await navigator.serviceWorker.register('/sw.js');
+        const registration = await navigator.serviceWorker.register('/sw.js');
         console.log('Service Worker registered successfully');
+        
+        // Handle service worker updates
+        registration.addEventListener('updatefound', () => {
+          console.log('Service Worker update found');
+          const newWorker = registration.installing;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('New Service Worker installed, reloading page...');
+              window.location.reload();
+            }
+          });
+        });
+        
+        // Check for updates
+        registration.update();
+        
       } catch (error) {
         console.error('Service Worker registration failed:', error);
       }
