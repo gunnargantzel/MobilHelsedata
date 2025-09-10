@@ -1,0 +1,5 @@
+[33m6c8fafd[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m refactor: Convert to pure PWA - remove all server dependencies
+[33m515a972[m feat: Complete Azure AD and Dataverse configuration
+[33m0e653a3[m Add tenant ID configuration and quick setup guide
+[33mf11aa4d[m Add Azure AD authentication and Dataverse integration
+[33m3b2e6cd[m Add backend API and data collection system
