@@ -14,7 +14,7 @@ class MobilHelsedataAzureApp {
       auth: {
         clientId: '7a0a3c1e-6465-41bf-901f-2b1850335c32',
         authority: 'https://login.microsoftonline.com/647bb407-d412-4d48-b7bf-367c871cfca6',
-        redirectUri: window.location.origin + '/auth/login',
+        redirectUri: window.location.origin + '/',
         postLogoutRedirectUri: window.location.origin + '/'
       },
       cache: {
@@ -74,13 +74,6 @@ class MobilHelsedataAzureApp {
           this.updateAuthUI();
           this.showNotification('Logget inn vellykket!', 'success');
           
-          // Redirect to clean URL after successful login
-          if (window.location.pathname === '/auth/login') {
-            console.log('Redirecting from /auth/login to root URL');
-            setTimeout(() => {
-              window.location.href = window.location.origin + '/';
-            }, 1000); // Small delay to ensure UI updates
-          }
         }
       } catch (error) {
         console.error('Redirect handling failed:', error);
@@ -612,11 +605,6 @@ class MobilHelsedataAzureApp {
 
 // MSAL handles all authentication callbacks automatically
 
-// Handle URL redirects for /auth/login
-if (window.location.pathname === '/auth/login' && !window.location.search.includes('code=')) {
-  console.log('Redirecting from /auth/login to root URL');
-  window.location.href = window.location.origin + '/';
-}
 
 // Initialize app normally
 document.addEventListener('DOMContentLoaded', () => {
