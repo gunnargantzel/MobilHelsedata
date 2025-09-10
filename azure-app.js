@@ -14,11 +14,22 @@ class MobilHelsedataAzureApp {
       auth: {
         clientId: '7a0a3c1e-6465-41bf-901f-2b1850335c32',
         authority: 'https://login.microsoftonline.com/647bb407-d412-4d48-b7bf-367c871cfca6',
-        redirectUri: window.location.origin
+        redirectUri: window.location.origin + '/',
+        postLogoutRedirectUri: window.location.origin + '/'
       },
       cache: {
         cacheLocation: 'localStorage',
         storeAuthStateInCookie: false
+      },
+      system: {
+        loggerOptions: {
+          loggerCallback: (level, message, containsPii) => {
+            if (containsPii) return;
+            console.log(message);
+          },
+          piiLoggingEnabled: false,
+          logLevel: 'Info'
+        }
       }
     };
     
@@ -34,6 +45,19 @@ class MobilHelsedataAzureApp {
       this.msalInstance = new PublicClientApplication(this.msalConfig);
       await this.msalInstance.initialize();
       console.log('MSAL initialized successfully');
+      
+      // Handle redirect response
+      const response = await this.msalInstance.handleRedirectPromise();
+      if (response) {
+        console.log('Login redirect response received');
+        this.msalInstance.setActiveAccount(response.account);
+        this.user = {
+          name: response.account.name,
+          email: response.account.username
+        };
+        this.updateAuthUI();
+        this.showNotification('Logget inn vellykket!', 'success');
+      }
     } catch (error) {
       console.error('MSAL initialization failed:', error);
     }
@@ -178,41 +202,34 @@ class MobilHelsedataAzureApp {
         prompt: 'select_account'
       };
 
-      const response = await this.msalInstance.loginPopup(loginRequest);
-      
-      if (response.account) {
-        this.msalInstance.setActiveAccount(response.account);
-        this.user = {
-          name: response.account.name,
-          email: response.account.username
-        };
-        this.updateAuthUI();
-        this.showNotification('Logget inn vellykket!', 'success');
-      }
+      // Use redirect instead of popup for better Azure Static Web Apps compatibility
+      await this.msalInstance.loginRedirect(loginRequest);
     } catch (error) {
       console.error('Login error:', error);
-      if (error.errorCode === 'user_cancelled') {
-        this.showNotification('Innlogging avbrutt', 'info');
-      } else {
-        this.showNotification('Kunne ikke logge inn', 'error');
-      }
+      this.showNotification('Kunne ikke logge inn', 'error');
     }
   }
 
   async logout() {
     if (this.msalInstance) {
       try {
-        await this.msalInstance.logoutPopup();
+        await this.msalInstance.logoutRedirect();
       } catch (error) {
         console.error('Logout error:', error);
+        // Fallback to local logout if redirect fails
+        this.clearAuthData();
+        this.user = null;
+        this.accessToken = null;
+        this.updateAuthUI();
+        this.showNotification('Du er nå logget ut', 'info');
       }
+    } else {
+      this.clearAuthData();
+      this.user = null;
+      this.accessToken = null;
+      this.updateAuthUI();
+      this.showNotification('Du er nå logget ut', 'info');
     }
-    
-    this.clearAuthData();
-    this.user = null;
-    this.accessToken = null;
-    this.updateAuthUI();
-    this.showNotification('Du er nå logget ut', 'info');
   }
 
   clearAuthData() {
