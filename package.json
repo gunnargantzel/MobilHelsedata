@@ -5,10 +5,12 @@
   "main": "index.html",
   "scripts": {
     "start": "node server.js",
+    "start:azure": "node azure-server.js",
     "start:python": "python server.py",
     "serve": "npx serve . -p 8000",
     "dev": "npx live-server --port=8000 --host=0.0.0.0",
     "dev:backend": "node server.js",
+    "dev:azure": "node azure-server.js",
     "build": "echo 'No build step required for static PWA'",
     "build:azure": "echo 'Azure build completed'"
   },

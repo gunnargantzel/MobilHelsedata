@@ -1,3 +1,6 @@
+// Load environment variables
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const session = require('express-session');
@@ -89,6 +92,13 @@ function authenticateToken(req, res, next) {
 // Initialize Dataverse connection
 async function initializeDataverse() {
   try {
+    // Check if Dataverse credentials are configured
+    if (config.dataverse.clientId === 'your-dataverse-client-id' || 
+        config.dataverse.clientSecret === 'your-dataverse-client-secret') {
+      console.log('⚠️  Dataverse credentials not configured. Skipping Dataverse connection.');
+      return false;
+    }
+
     const credential = new ClientSecretCredential(
       config.azure.tenantId,
       config.dataverse.clientId,
@@ -100,10 +110,13 @@ async function initializeDataverse() {
     // Test connection
     await dataverseClient.retrieve('WhoAmI', '?$select=UserId');
     console.log('✅ Dataverse connection established');
+    console.log(`📊 Dataverse URL: ${config.dataverse.url}`);
+    console.log(`🏢 Environment ID: ${config.dataverse.environmentId}`);
     
     return true;
   } catch (error) {
     console.error('❌ Dataverse connection failed:', error.message);
+    console.log('💡 Make sure to configure DATAVERSE_CLIENT_ID and DATAVERSE_CLIENT_SECRET environment variables');
     return false;
   }
 }
@@ -240,6 +253,10 @@ app.post('/auth/callback', async (req, res) => {
   try {
     const { code } = req.body;
     
+    if (!code) {
+      return res.status(400).json({ error: 'Authorization code is required' });
+    }
+    
     const tokenRequest = {
       code: code,
       scopes: config.azure.scopes,
@@ -253,23 +270,30 @@ app.post('/auth/callback', async (req, res) => {
       { 
         userId: response.account.homeAccountId,
         email: response.account.username,
-        name: response.account.name
+        name: response.account.name,
+        tenantId: config.azure.tenantId
       },
       config.server.jwtSecret,
       { expiresIn: '24h' }
     );
+
+    console.log(`✅ User authenticated: ${response.account.username}`);
 
     res.json({ 
       success: true, 
       token: jwtToken,
       user: {
         email: response.account.username,
-        name: response.account.name
+        name: response.account.name,
+        tenantId: config.azure.tenantId
       }
     });
   } catch (error) {
     console.error('Callback error:', error);
-    res.status(500).json({ error: 'Authentication failed' });
+    res.status(500).json({ 
+      error: 'Authentication failed',
+      details: error.message 
+    });
   }
 });
 
@@ -475,8 +499,13 @@ async function startServer() {
     console.log(`   POST /api/health-data - Receive health data (authenticated)`);
     console.log(`   POST /api/location-data - Receive location data (authenticated)`);
     console.log(`   GET  /api/user/data - Get user data from Dataverse`);
-    console.log(`🔐 Azure AD: ${config.azure.clientId ? 'Configured' : 'Not configured'}`);
+    console.log(`🔐 Azure AD: ${config.azure.clientId && config.azure.clientId !== 'your-client-id-here' ? 'Configured' : 'Not configured'}`);
     console.log(`💾 Dataverse: ${dataverseConnected ? 'Connected' : 'Not connected'}`);
+    console.log(`📋 Configuration:`);
+    console.log(`   Azure Client ID: ${config.azure.clientId}`);
+    console.log(`   Azure Tenant ID: ${config.azure.tenantId}`);
+    console.log(`   Dataverse URL: ${config.dataverse.url}`);
+    console.log(`   Environment ID: ${config.dataverse.environmentId}`);
   });
 }
 

@@ -30,11 +30,21 @@ En Progressive Web App (PWA) som lar brukere samle og dele helsedata og lokasjon
 ## Installasjon og bruk
 
 ### For utviklere
+
+#### Standard PWA (uten Azure-integrasjon)
 1. Klon eller last ned prosjektet
 2. Åpne `create-icons.html` i en nettleser for å generere ikoner
 3. Last ned alle ikoner til `icons/`-mappen
 4. Start en lokal web-server (f.eks. med Python: `python -m http.server 8000`)
 5. Åpne appen i Safari på iPhone
+
+#### Azure-integrasjon (anbefalt for produksjon)
+1. Klon eller last ned prosjektet
+2. Installer avhengigheter: `npm install`
+3. Konfigurer Azure AD og Dataverse (se `AZURE_SETUP.md`)
+4. Opprett `.env` fil med dine credentials (se `azure-config.example.js`)
+5. Start Azure-serveren: `npm run start:azure`
+6. Åpne appen på `http://localhost:3000`
 
 ### For brukere
 1. Åpne appen i Safari på iPhone
@@ -72,6 +82,8 @@ Brukeren kan velge mellom:
 ## Utvikling
 
 ### Lokal utvikling
+
+#### Standard PWA
 ```bash
 # Start lokal server
 python -m http.server 8000
@@ -81,6 +93,18 @@ npx serve .
 
 # Eller med PHP
 php -S localhost:8000
+```
+
+#### Azure-integrasjon
+```bash
+# Installer avhengigheter
+npm install
+
+# Start Azure-serveren
+npm run start:azure
+
+# Eller for utvikling
+npm run dev:azure
 ```
 
 ### Testing på iPhone
