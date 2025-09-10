@@ -41,23 +41,14 @@ class MobilHelsedataAzureApp {
   async init() {
     // Initialize MSAL
     try {
-      // Try to load MSAL from CDN
-      const { PublicClientApplication } = await import('https://unpkg.com/@azure/msal-browser@latest/dist/msal-browser.min.js');
+      // Load MSAL from local node_modules
+      const { PublicClientApplication } = await import('./node_modules/@azure/msal-browser/dist/msal-browser.min.js');
       this.msalInstance = new PublicClientApplication(this.msalConfig);
       await this.msalInstance.initialize();
-      console.log('MSAL initialized successfully');
+      console.log('MSAL initialized successfully from local files');
     } catch (error) {
-      console.error('MSAL CDN load failed, trying alternative:', error);
-      try {
-        // Fallback: try to load from local node_modules if available
-        const { PublicClientApplication } = await import('./node_modules/@azure/msal-browser/dist/msal-browser.min.js');
-        this.msalInstance = new PublicClientApplication(this.msalConfig);
-        await this.msalInstance.initialize();
-        console.log('MSAL initialized from local files');
-      } catch (localError) {
-        console.error('MSAL initialization completely failed:', localError);
-        this.msalInstance = null;
-      }
+      console.error('MSAL initialization failed:', error);
+      this.msalInstance = null;
     }
 
     // Handle redirect response only if MSAL is initialized
