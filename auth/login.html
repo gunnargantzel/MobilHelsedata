@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logg inn - Mobil Helsedata</title>
+    <link rel="icon" href="../icons/favicon.svg" type="image/svg+xml">
+    <link rel="manifest" href="../manifest.json?v=4">
+    <meta name="mobile-web-app-capable" content="yes">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        .logo {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .login-btn {
+            background: #0078d4;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 20px;
+            transition: background 0.3s;
+        }
+        .login-btn:hover {
+            background: #106ebe;
+        }
+        .login-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .loading {
+            display: none;
+            color: #666;
+            margin-top: 20px;
+        }
+        .error {
+            color: #d13438;
+            margin-top: 20px;
+            padding: 10px;
+            background: #fef7f7;
+            border-radius: 5px;
+            display: none;
+        }
+        .back-link {
+            color: #0078d4;
+            text-decoration: none;
+            margin-top: 20px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">🏥</div>
+        <h1>Mobil Helsedata</h1>
+        <p class="subtitle">Logg inn med Microsoft Entra ID</p>
+        
+        <button id="loginBtn" class="login-btn">
+            Logg inn med Microsoft
+        </button>
+        
+        <div class="loading" id="loading">
+            Logger inn...
+        </div>
+        
+        <div class="error" id="error"></div>
+        
+        <a href="../" class="back-link">← Tilbake til hovedside</a>
+    </div>
+
+    <script>
+        // Simple redirect logic for auth/login page
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginBtn = document.getElementById('loginBtn');
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            
+            // Check if we have auth code in URL (successful redirect)
+            const urlParams = new URLSearchParams(window.location.search);
+            const authCode = urlParams.get('code');
+            
+            if (authCode) {
+                // We have an auth code, redirect to main app
+                console.log('Auth code received, redirecting to main app');
+                window.location.href = '../';
+                return;
+            }
+            
+            // Handle login button click
+            loginBtn.addEventListener('click', function() {
+                loading.style.display = 'block';
+                loginBtn.disabled = true;
+                
+                // Redirect to Microsoft login
+                const clientId = '7a0a3c1e-6465-41bf-901f-2b1850335c32';
+                const tenantId = '647bb407-d412-4d48-b7bf-367c871cfca6';
+                const redirectUri = window.location.origin + '/auth/login';
+                
+                const loginUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize?` +
+                    `client_id=${clientId}&` +
+                    `response_type=code&` +
+                    `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+                    `scope=openid profile email User.Read&` +
+                    `response_mode=query&` +
+                    `state=login`;
+                
+                console.log('Redirecting to Microsoft login:', loginUrl);
+                window.location.href = loginUrl;
+            });
+            
+            // Check for errors in URL
+            const errorParam = urlParams.get('error');
+            const errorDescription = urlParams.get('error_description');
+            
+            if (errorParam) {
+                loading.style.display = 'none';
+                loginBtn.disabled = false;
+                error.style.display = 'block';
+                error.textContent = `Login feilet: ${errorDescription || errorParam}`;
+            }
+        });
+    </script>
+</body>
+</html>

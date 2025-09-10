@@ -41,30 +41,50 @@ class MobilHelsedataAzureApp {
   async init() {
     // Initialize MSAL
     try {
+      // Try to load MSAL from CDN
       const { PublicClientApplication } = await import('https://unpkg.com/@azure/msal-browser@latest/dist/msal-browser.min.js');
       this.msalInstance = new PublicClientApplication(this.msalConfig);
       await this.msalInstance.initialize();
       console.log('MSAL initialized successfully');
-      
-      // Handle redirect response
-      const response = await this.msalInstance.handleRedirectPromise();
-      if (response) {
-        console.log('Login redirect response received');
-        this.msalInstance.setActiveAccount(response.account);
-        this.user = {
-          name: response.account.name,
-          email: response.account.username
-        };
-        this.updateAuthUI();
-        this.showNotification('Logget inn vellykket!', 'success');
-        
-        // Redirect to clean URL after successful login
-        if (window.location.pathname === '/auth/login') {
-          window.location.href = window.location.origin + '/';
-        }
-      }
     } catch (error) {
-      console.error('MSAL initialization failed:', error);
+      console.error('MSAL CDN load failed, trying alternative:', error);
+      try {
+        // Fallback: try to load from local node_modules if available
+        const { PublicClientApplication } = await import('./node_modules/@azure/msal-browser/dist/msal-browser.min.js');
+        this.msalInstance = new PublicClientApplication(this.msalConfig);
+        await this.msalInstance.initialize();
+        console.log('MSAL initialized from local files');
+      } catch (localError) {
+        console.error('MSAL initialization completely failed:', localError);
+        this.msalInstance = null;
+      }
+    }
+
+    // Handle redirect response only if MSAL is initialized
+    if (this.msalInstance) {
+      try {
+        const response = await this.msalInstance.handleRedirectPromise();
+        if (response) {
+          console.log('Login redirect response received');
+          this.msalInstance.setActiveAccount(response.account);
+          this.user = {
+            name: response.account.name,
+            email: response.account.username
+          };
+          this.updateAuthUI();
+          this.showNotification('Logget inn vellykket!', 'success');
+          
+          // Redirect to clean URL after successful login
+          if (window.location.pathname === '/auth/login') {
+            console.log('Redirecting from /auth/login to root URL');
+            setTimeout(() => {
+              window.location.href = window.location.origin + '/';
+            }, 1000); // Small delay to ensure UI updates
+          }
+        }
+      } catch (error) {
+        console.error('Redirect handling failed:', error);
+      }
     }
 
     // Register service worker
@@ -197,7 +217,8 @@ class MobilHelsedataAzureApp {
 
   async login() {
     if (!this.msalInstance) {
-      this.showNotification('Autentisering ikke tilgjengelig', 'error');
+      this.showNotification('Autentisering ikke tilgjengelig - MSAL ikke lastet', 'error');
+      console.error('MSAL instance not available');
       return;
     }
 
@@ -207,11 +228,33 @@ class MobilHelsedataAzureApp {
         prompt: 'select_account'
       };
 
-      // Use redirect instead of popup for better Azure Static Web Apps compatibility
-      await this.msalInstance.loginRedirect(loginRequest);
+      // Detect if we're on mobile and use appropriate method
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      if (isMobile) {
+        console.log('Mobile device detected, using redirect');
+        await this.msalInstance.loginRedirect(loginRequest);
+      } else {
+        console.log('Desktop device, trying popup first');
+        try {
+          const response = await this.msalInstance.loginPopup(loginRequest);
+          if (response.account) {
+            this.msalInstance.setActiveAccount(response.account);
+            this.user = {
+              name: response.account.name,
+              email: response.account.username
+            };
+            this.updateAuthUI();
+            this.showNotification('Logget inn vellykket!', 'success');
+          }
+        } catch (popupError) {
+          console.log('Popup failed, falling back to redirect:', popupError);
+          await this.msalInstance.loginRedirect(loginRequest);
+        }
+      }
     } catch (error) {
       console.error('Login error:', error);
-      this.showNotification('Kunne ikke logge inn', 'error');
+      this.showNotification('Kunne ikke logge inn: ' + error.message, 'error');
     }
   }
 
@@ -568,6 +611,12 @@ class MobilHelsedataAzureApp {
 }
 
 // MSAL handles all authentication callbacks automatically
+
+// Handle URL redirects for /auth/login
+if (window.location.pathname === '/auth/login' && !window.location.search.includes('code=')) {
+  console.log('Redirecting from /auth/login to root URL');
+  window.location.href = window.location.origin + '/';
+}
 
 // Initialize app normally
 document.addEventListener('DOMContentLoaded', () => {
