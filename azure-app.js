@@ -40,9 +40,12 @@ class MobilHelsedataAzureApp {
 
   async init() {
     // Initialize MSAL
+    console.log('Starting MSAL initialization...');
     try {
       // Load MSAL from local node_modules
+      console.log('Loading MSAL from local node_modules...');
       const { PublicClientApplication } = await import('./node_modules/@azure/msal-browser/dist/msal-browser.min.js');
+      console.log('MSAL module loaded successfully');
       this.msalInstance = new PublicClientApplication(this.msalConfig);
       await this.msalInstance.initialize();
       console.log('MSAL initialized successfully from local files');
