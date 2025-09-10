@@ -1,13 +1,12 @@
 // Service Worker for Mobil Helsedata PWA
-const CACHE_NAME = 'mobil-helsedata-v1';
+const CACHE_NAME = 'mobil-helsedata-v2';
 const urlsToCache = [
   '/',
   '/index.html',
   '/styles.css',
-  '/app.js',
+  '/azure-app.js',
   '/manifest.json',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png'
+  '/icons/favicon.svg'
 ];
 
 // Install event - cache resources
@@ -16,7 +15,17 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('Opened cache');
-        return cache.addAll(urlsToCache);
+        return cache.addAll(urlsToCache).catch((error) => {
+          console.log('Cache addAll failed:', error);
+          // Add files individually to avoid failing on missing files
+          return Promise.all(
+            urlsToCache.map(url => 
+              cache.add(url).catch(err => 
+                console.log(`Failed to cache ${url}:`, err)
+              )
+            )
+          );
+        });
       })
   );
 });
