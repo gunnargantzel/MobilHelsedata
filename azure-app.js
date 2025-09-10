@@ -35,6 +35,18 @@ class MobilHelsedataAzureApp {
     
     this.msalInstance = null;
     
+    // Dataverse Configuration
+    this.dataverseConfig = window.DATAVERSE_CONFIG || {
+      environmentUrl: 'https://gunnarpowerai.api.crm4.dynamics.com',
+      apiVersion: '9.2',
+      entities: {
+        mobilHelsedata: 'crd12_mobilhelsedatas'
+      },
+      fields: {
+        data: 'crd12_data'
+      }
+    };
+    
     this.init();
   }
 
@@ -240,7 +252,7 @@ class MobilHelsedataAzureApp {
 
     try {
       const loginRequest = {
-        scopes: ['User.Read', 'openid', 'profile', 'email'],
+        scopes: ['User.Read', 'openid', 'profile', 'email', 'https://gunnarpowerai.api.crm4.dynamics.com/.default'],
         prompt: 'select_account'
       };
 
@@ -534,14 +546,18 @@ class MobilHelsedataAzureApp {
     const shareData = {
       locationData: this.locationData,
       healthData: this.healthData,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      userId: this.user.email
     };
 
     try {
-      // Store data locally instead of sending to server
+      // Store data in Dataverse
+      await this.saveToDataverse(shareData);
+      
+      // Also store locally as backup
       localStorage.setItem('mobilHelsedata_shared', JSON.stringify(shareData));
       
-      this.showNotification('Data lagret lokalt!', 'success');
+      this.showNotification('Data lagret i Dataverse!', 'success');
       
       // Also offer native sharing
       if (navigator.share) {
@@ -553,11 +569,99 @@ class MobilHelsedataAzureApp {
       }
     } catch (error) {
       console.error('Share error:', error);
-      this.showNotification('Kunne ikke sende data til server', 'error');
+      this.showNotification('Kunne ikke lagre data i Dataverse: ' + error.message, 'error');
+      
+      // Fallback to local storage
+      localStorage.setItem('mobilHelsedata_shared', JSON.stringify(shareData));
+      this.showNotification('Data lagret lokalt som backup', 'warning');
     }
   }
 
-  // Data is now stored locally - no server requests needed
+  // Dataverse Integration Methods
+  
+  async saveToDataverse(data) {
+    if (!this.accessToken) {
+      await this.getAccessTokenForDataverse();
+    }
+
+    const dataverseUrl = `${this.dataverseConfig.environmentUrl}/api/data/v${this.dataverseConfig.apiVersion}`;
+    
+    try {
+      // Create single record with all data in JSON format
+      await this.createMobilHelsedataRecord(data);
+      
+      console.log('Data successfully saved to Dataverse');
+    } catch (error) {
+      console.error('Dataverse save error:', error);
+      throw error;
+    }
+  }
+
+  async getAccessTokenForDataverse() {
+    if (!this.msalInstance) {
+      throw new Error('MSAL not initialized');
+    }
+
+    try {
+      const tokenRequest = {
+        scopes: ['https://gunnarpowerai.api.crm4.dynamics.com/.default'],
+        account: this.msalInstance.getActiveAccount()
+      };
+
+      const response = await this.msalInstance.acquireTokenSilent(tokenRequest);
+      this.accessToken = response.accessToken;
+      return this.accessToken;
+    } catch (error) {
+      console.error('Token acquisition failed:', error);
+      throw error;
+    }
+  }
+
+  async createMobilHelsedataRecord(data) {
+    const dataverseUrl = `${this.dataverseConfig.environmentUrl}/api/data/v${this.dataverseConfig.apiVersion}`;
+    
+    // Prepare the complete data object for JSON storage
+    const completeData = {
+      locationData: data.locationData,
+      healthData: data.healthData,
+      timestamp: data.timestamp,
+      userId: data.userId,
+      userInfo: {
+        name: this.user.name,
+        email: this.user.email
+      },
+      metadata: {
+        appVersion: '1.1.0',
+        collectedAt: new Date().toISOString(),
+        dataTypes: data.healthData ? data.healthData.selectedTypes : [],
+        hasLocation: !!data.locationData,
+        hasHealth: !!data.healthData
+      }
+    };
+
+    const record = {
+      [this.dataverseConfig.fields.data]: JSON.stringify(completeData)
+    };
+
+    const response = await fetch(`${dataverseUrl}/${this.dataverseConfig.entities.mobilHelsedata}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.accessToken}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'OData-MaxVersion': '4.0',
+        'OData-Version': '4.0'
+      },
+      body: JSON.stringify(record)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Mobil Helsedata record creation failed: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+
+    return await response.json();
+  }
 
   setupInstallPrompt() {
     let deferredPrompt;
