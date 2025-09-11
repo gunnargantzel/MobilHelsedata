@@ -252,7 +252,7 @@ class MobilHelsedataAzureApp {
 
     try {
       const loginRequest = {
-        scopes: ['User.Read', 'openid', 'profile', 'email', 'https://gunnarpowerai.api.crm4.dynamics.com/.default'],
+        scopes: ['User.Read', 'openid', 'profile', 'email'],
         prompt: 'select_account'
       };
 
@@ -587,13 +587,20 @@ class MobilHelsedataAzureApp {
     const dataverseUrl = `${this.dataverseConfig.environmentUrl}/api/data/v${this.dataverseConfig.apiVersion}`;
     
     try {
-      // Create single record with all data in JSON format
+      // First check if entity exists, if not try alternative names
       await this.createMobilHelsedataRecord(data);
       
       console.log('Data successfully saved to Dataverse');
     } catch (error) {
       console.error('Dataverse save error:', error);
-      throw error;
+      
+      // If entity not found, try to find the correct entity name
+      if (error.message.includes('Resource not found')) {
+        console.log('Entity not found, trying to find correct entity name...');
+        await this.findAndUseCorrectEntity(data);
+      } else {
+        throw error;
+      }
     }
   }
 
@@ -660,6 +667,103 @@ class MobilHelsedataAzureApp {
       throw new Error(`Mobil Helsedata record creation failed: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
+    return await response.json();
+  }
+
+  async findAndUseCorrectEntity(data) {
+    const dataverseUrl = `${this.dataverseConfig.environmentUrl}/api/data/v${this.dataverseConfig.apiVersion}`;
+    
+    // Try different possible entity names
+    const possibleEntityNames = [
+      'crd12_mobilhelsedatas',
+      'mobilhelsedatas', 
+      'mobil_helsedatas',
+      'helsedatas',
+      'healthdatas',
+      'locationdatas',
+      'mobilhelsedata',
+      'crd12_mobilhelsedata'
+    ];
+
+    for (const entityName of possibleEntityNames) {
+      try {
+        console.log(`Trying entity name: ${entityName}`);
+        
+        // Try to get entity metadata to see if it exists
+        const metadataResponse = await fetch(`${dataverseUrl}/$metadata`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`,
+            'Accept': 'application/xml'
+          }
+        });
+
+        if (metadataResponse.ok) {
+          const metadata = await metadataResponse.text();
+          if (metadata.includes(entityName)) {
+            console.log(`Found entity: ${entityName}`);
+            // Update config and try to create record
+            this.dataverseConfig.entities.mobilHelsedata = entityName;
+            await this.createMobilHelsedataRecord(data);
+            return;
+          }
+        }
+      } catch (error) {
+        console.log(`Entity ${entityName} not found, trying next...`);
+        continue;
+      }
+    }
+
+    // If no entity found, create a simple record in a standard entity
+    console.log('No custom entity found, trying to use standard entities...');
+    await this.createRecordInStandardEntity(data);
+  }
+
+  async createRecordInStandardEntity(data) {
+    const dataverseUrl = `${this.dataverseConfig.environmentUrl}/api/data/v${this.dataverseConfig.apiVersion}`;
+    
+    // Try to create a record in the 'notes' entity as a fallback
+    const completeData = {
+      locationData: data.locationData,
+      healthData: data.healthData,
+      timestamp: data.timestamp,
+      userId: data.userId,
+      userInfo: {
+        name: this.user.name,
+        email: this.user.email
+      },
+      metadata: {
+        appVersion: '1.1.1',
+        collectedAt: new Date().toISOString(),
+        dataTypes: data.healthData ? data.healthData.selectedTypes : [],
+        hasLocation: !!data.locationData,
+        hasHealth: !!data.healthData
+      }
+    };
+
+    const record = {
+      'notetext': `Mobil Helsedata: ${JSON.stringify(completeData)}`,
+      'subject': `Helsedata fra ${this.user.name} - ${new Date().toLocaleDateString()}`
+    };
+
+    const response = await fetch(`${dataverseUrl}/annotations`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.accessToken}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'OData-MaxVersion': '4.0',
+        'OData-Version': '4.0'
+      },
+      body: JSON.stringify(record)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to create record in standard entity: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+
+    console.log('Data saved to standard entity (annotations) as fallback');
     return await response.json();
   }
 
