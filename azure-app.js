@@ -628,6 +628,9 @@ class MobilHelsedataAzureApp {
   async createMobilHelsedataRecord(data) {
     const dataverseUrl = `${this.dataverseConfig.environmentUrl}/api/data/v${this.dataverseConfig.apiVersion}`;
     
+    console.log(`Creating record in entity: ${this.dataverseConfig.entities.mobilHelsedata}`);
+    console.log(`Using fields:`, this.dataverseConfig.fields);
+    
     // Prepare the complete data object for JSON storage
     const completeData = {
       locationData: data.locationData,
@@ -648,9 +651,15 @@ class MobilHelsedataAzureApp {
     };
 
     const record = {
-      [this.dataverseConfig.fields.data]: JSON.stringify(completeData),
       [this.dataverseConfig.fields.id]: `Helsedata_${new Date().toISOString().slice(0, 10)}_${this.user.email.split('@')[0]}`
     };
+
+    // Try to add data field if it exists, but don't fail if it doesn't
+    try {
+      record[this.dataverseConfig.fields.data] = JSON.stringify(completeData);
+    } catch (error) {
+      console.log('Data field not available, storing only ID field');
+    }
 
     const response = await fetch(`${dataverseUrl}/${this.dataverseConfig.entities.mobilHelsedata}`, {
       method: 'POST',
