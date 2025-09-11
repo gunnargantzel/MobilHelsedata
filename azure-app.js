@@ -673,9 +673,44 @@ class MobilHelsedataAzureApp {
   }
 
   async findAndUseCorrectEntity(data) {
+    console.log('Entity not found, trying to find correct entity name...');
+    
     const dataverseUrl = `${this.dataverseConfig.environmentUrl}/api/data/v${this.dataverseConfig.apiVersion}`;
     
-    // Try different possible entity names
+    // First try the configured entity name
+    const configuredEntity = this.dataverseConfig.entities.mobilHelsedata;
+    console.log(`First trying configured entity: ${configuredEntity}`);
+    
+    try {
+      const testRecord = {
+        [this.dataverseConfig.fields.id]: `test-${Date.now()}`
+      };
+
+      const testResponse = await fetch(`${dataverseUrl}/${configuredEntity}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.accessToken}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'OData-MaxVersion': '4.0',
+          'OData-Version': '4.0'
+        },
+        body: JSON.stringify(testRecord)
+      });
+
+      if (testResponse.ok) {
+        console.log(`Configured entity ${configuredEntity} works! Creating actual record...`);
+        await this.createMobilHelsedataRecord(data);
+        return;
+      } else {
+        const errorText = await testResponse.text().catch(() => 'Unknown error');
+        console.log(`Configured entity ${configuredEntity} failed (${testResponse.status}): ${errorText}`);
+      }
+    } catch (error) {
+      console.log(`Configured entity ${configuredEntity} error: ${error.message}`);
+    }
+    
+    // List of possible entity names to try as fallback
     const possibleEntityNames = [
       'crd12_testhelsedatas',     // Your actual entity
       'crd12_mobilhelsedatas',
@@ -692,9 +727,25 @@ class MobilHelsedataAzureApp {
       try {
         console.log(`Trying entity name: ${entityName}`);
         
+        // First try to get entity metadata to verify it exists
+        const metadataResponse = await fetch(`${dataverseUrl}/$metadata#EntitySet`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`,
+            'Accept': 'application/xml',
+            'OData-MaxVersion': '4.0',
+            'OData-Version': '4.0'
+          }
+        });
+
+        // If metadata call fails, try direct record creation
+        if (!metadataResponse.ok) {
+          console.log(`Metadata check failed for ${entityName}, trying direct creation...`);
+        }
+        
         // Try to create a record directly to test if entity exists
         const testRecord = {
-          [this.dataverseConfig.fields.data]: JSON.stringify({ test: 'entity detection' })
+          [this.dataverseConfig.fields.id]: `test-${Date.now()}` // Use the primary name field which should always exist
         };
 
         const testResponse = await fetch(`${dataverseUrl}/${entityName}`, {
@@ -719,7 +770,8 @@ class MobilHelsedataAzureApp {
           console.log(`Entity ${entityName} not found (404), trying next...`);
           continue;
         } else {
-          console.log(`Entity ${entityName} exists but has issues (${testResponse.status}), trying next...`);
+          const errorText = await testResponse.text().catch(() => 'Unknown error');
+          console.log(`Entity ${entityName} exists but has issues (${testResponse.status}): ${errorText}, trying next...`);
           continue;
         }
       } catch (error) {
