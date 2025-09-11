@@ -89,6 +89,24 @@ Brukeren kan velge mellom:
 - **Firefox**: Full støtte
 - **Edge**: Full støtte
 
+## CI/CD og Deployment
+
+Denne appen bruker GitHub Actions for automatisk deployment til Azure Static Web Apps. Se [CI_POLICY.md](CI_POLICY.md) for detaljert informasjon om CI/CD-policyen.
+
+### Deployment-strategi
+- **Push til main**: Deployer til produksjon
+- **Pull Requests**: Lager preview-miljøer for testing
+- **Auto-commits**: Hoppes over med `[skip ci]` tag
+
+### Hurtigstart for utviklere
+```bash
+# Hopp over CI for dokumentasjon
+git commit -m "Update README [skip ci]"
+
+# Normal commit som trigger deployment
+git commit -m "Fix authentication bug"
+```
+
 ## Utvikling
 
 ### Lokal utvikling

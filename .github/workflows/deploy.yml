@@ -1,0 +1,99 @@
+name: Deploy to Azure Static Web Apps
+
+on:
+  # Only trigger on push to main (production deployments)
+  push:
+    branches:
+      - main
+    # Skip CI for auto-commits
+    paths-ignore:
+      - 'README.md'
+      - '.gitignore'
+      - 'LICENSE'
+
+  # Only trigger on PR for preview deployments
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches:
+      - main
+    # Skip CI for auto-commits
+    paths-ignore:
+      - 'README.md'
+      - '.gitignore'
+      - 'LICENSE'
+
+# Prevent concurrent runs from same repo
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Skip CI if commit message contains [skip ci]
+  check_skip_ci:
+    runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+      - name: Check if CI should be skipped
+        id: skip_check
+        run: |
+          if [[ "${{ github.event.head_commit.message }}" == *"[skip ci]"* ]]; then
+            echo "should_skip=true" >> $GITHUB_OUTPUT
+            echo "⏭️ Skipping CI due to [skip ci] in commit message"
+          else
+            echo "should_skip=false" >> $GITHUB_OUTPUT
+            echo "✅ CI will run"
+          fi
+
+  # Build and deploy job
+  build_and_deploy:
+    needs: check_skip_ci
+    if: needs.check_skip_ci.outputs.should_skip == 'false'
+    runs-on: ubuntu-latest
+    name: Build and Deploy
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          lfs: false
+
+      - name: Build and Deploy to Azure Static Web Apps
+        id: builddeploy
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          # Use the specific token for your environment
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_AMBITIOUS_STONE_07A45D403 }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: "upload"
+          ###### Repository/Build Configurations ######
+          app_location: "/" # App source code path
+          api_location: "" # Api source code path - optional
+          output_location: "." # Built app content directory
+          ###### End of Repository/Build Configurations ######
+
+  # Close PR preview job
+  close_pull_request:
+    needs: check_skip_ci
+    if: needs.check_skip_ci.outputs.should_skip == 'false' && github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    name: Close Pull Request Preview
+    steps:
+      - name: Close Pull Request Preview
+        id: closepullrequest
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_AMBITIOUS_STONE_07A45D403 }}
+          action: "close"
+
+  # Skip notification job
+  skip_notification:
+    needs: check_skip_ci
+    if: needs.check_skip_ci.outputs.should_skip == 'true'
+    runs-on: ubuntu-latest
+    name: Skip CI Notification
+    steps:
+      - name: Skip CI
+        run: |
+          echo "⏭️ CI skipped due to [skip ci] in commit message"
+          echo "Commit: ${{ github.event.head_commit.message }}"
