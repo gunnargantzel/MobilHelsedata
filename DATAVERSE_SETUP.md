@@ -17,14 +17,18 @@ Denne guiden hjelper deg med å sette opp Microsoft Dataverse for automatisk lag
 
 ## 📋 Steg 2: Bruk Eksisterende Entity
 
-Du har allerede en `crd12_mobilhelsedatas` entity med følgende struktur:
+Du har allerede en `crd12_testhelsedata` entity med følgende struktur:
 
-**Entity**: `crd12_mobilhelsedatas`
-- **Display name**: Mobil Helsedatas
-- **Plural name**: Mobil Helsedatas
+**Entity**: `crd12_testhelsedatas`
+- **Display name**: TestHelseData
+- **Plural name**: TestHelseData
+- **Logical name**: crd12_testhelsedata
+- **Primary ID**: crd12_testhelsedataid
+- **Primary Name**: crd12_id
 
 **Kolonner som brukes:**
 - `crd12_data` (Multiple lines of text) - JSON-data med all informasjon
+- `crd12_id` (Single line of text) - Primært navn-felt
 - `createdon` (Date and time) - Auto-generert når record opprettes
 - `modifiedon` (Date and time) - Auto-generert når record oppdateres
 - `ownerid` (Lookup) - Auto-generert basert på pålogget bruker

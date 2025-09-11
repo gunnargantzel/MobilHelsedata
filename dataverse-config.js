@@ -15,12 +15,14 @@ const DATAVERSE_CONFIG = {
   
   // Custom entities for storing data
   entities: {
-    mobilHelsedata: 'crd12_mobilhelsedatas'
+    mobilHelsedata: 'crd12_testhelsedatas'
   },
   
   // Field mappings for mobil helsedata entity
   fields: {
-    data: 'crd12_data',           // JSON field for all data
+    data: 'crd12_data',           // JSON field for all data (you may need to create this field)
+    id: 'crd12_id',               // Primary name field
+    primaryId: 'crd12_testhelsedataid', // Primary ID field
     createdOn: 'createdon',        // Auto-generated timestamp
     modifiedOn: 'modifiedon',     // Auto-generated timestamp
     ownerId: 'ownerid',           // Auto-generated owner

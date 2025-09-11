@@ -40,10 +40,11 @@ class MobilHelsedataAzureApp {
       environmentUrl: 'https://gunnarpowerai.api.crm4.dynamics.com',
       apiVersion: '9.2',
       entities: {
-        mobilHelsedata: 'crd12_mobilhelsedatas'
+        mobilHelsedata: 'crd12_testhelsedatas'
       },
       fields: {
-        data: 'crd12_data'
+        data: 'crd12_data',
+        id: 'crd12_id'
       }
     };
     
@@ -647,7 +648,8 @@ class MobilHelsedataAzureApp {
     };
 
     const record = {
-      [this.dataverseConfig.fields.data]: JSON.stringify(completeData)
+      [this.dataverseConfig.fields.data]: JSON.stringify(completeData),
+      [this.dataverseConfig.fields.id]: `Helsedata_${new Date().toISOString().slice(0, 10)}_${this.user.email.split('@')[0]}`
     };
 
     const response = await fetch(`${dataverseUrl}/${this.dataverseConfig.entities.mobilHelsedata}`, {
@@ -675,6 +677,7 @@ class MobilHelsedataAzureApp {
     
     // Try different possible entity names
     const possibleEntityNames = [
+      'crd12_testhelsedatas',     // Your actual entity
       'crd12_mobilhelsedatas',
       'mobilhelsedatas', 
       'mobil_helsedatas',
